@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#100b15">
+  <title>GXPAIN | Controller &amp; Macro Studio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0811;
+      --panel: #17111e;
+      --line: #39263f;
+      --pink: #ff5b9b;
+      --purple: #9d6bff;
+      --white: #f8f4ff;
+      --muted: #b4a9bf;
+      --green: #58d79b;
+      font: 14px/1.45 Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--white);
+      background:
+        radial-gradient(circle at 12% 10%, #49254d 0, transparent 35%),
+        radial-gradient(circle at 92% 30%, #702c48 0, transparent 30%),
+        linear-gradient(135deg, #0b0811, #171020 60%, #09090e);
+    }
+
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--pink);
+      outline-offset: 2px;
+    }
+
+    header {
+      position: sticky;
+      z-index: 2;
+      top: 0;
+      display: flex;
+      min-height: 72px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 24px;
+      border-bottom: 1px solid #ffffff12;
+      background: #09070ddd;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; letter-spacing: 2px; }
+    .brandmark { color: white; font: 900 34px Georgia, serif; text-shadow: 0 0 20px var(--pink); }
+    .sub { display: block; margin-top: 1px; color: var(--muted); font-size: 9px; letter-spacing: 2px; }
+    .header-note { color: var(--muted); font-size: 11px; }
+    main { max-width: 1200px; margin: auto; padding: 28px 20px 48px; }
+    .intro { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+    .intro h1 { margin: 0; font-size: clamp(24px, 3vw, 34px); letter-spacing: 1px; }
+    .intro p { margin: 6px 0 0; color: var(--muted); }
+    .badge { padding: 7px 10px; border: 1px solid #773d63; border-radius: 20px; color: #ffc0d7; background: #32192d; font-size: 10px; letter-spacing: 1.5px; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, .8fr); gap: 16px; }
+    .panel { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(150deg, #1b1422f2, #100e18f2); box-shadow: 0 20px 60px #0003; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid #ffffff10; }
+    .panel-head h2, .section-title { margin: 0; font-size: 12px; letter-spacing: 1.2px; }
+    .small, .muted { color: var(--muted); font-size: 11px; }
+    .controller-wrap { display: grid; min-height: 320px; place-items: center; padding: 22px; }
+    .controller {
+      position: relative;
+      width: min(100%, 590px);
+      aspect-ratio: 1.65;
+      filter: drop-shadow(0 22px 30px #0006);
+    }
+    .shell, .paint {
+      position: absolute;
+      inset: 8% 5% 4%;
+      clip-path: polygon(18% 3%,31% 0,42% 8%,58% 8%,69% 0,82% 3%,96% 34%,100% 70%,90% 95%,78% 89%,64% 68%,36% 68%,22% 89%,10% 95%,0 70%,4% 34%);
+    }
+    .shell { background: linear-gradient(145deg, #eeeef4, #b8b9c4 50%, #ececf2); }
+    .paint { background: linear-gradient(115deg, #a765ff22 15%, transparent 34%, transparent 62%, #ff456744 83%); }
+    .center {
+      position: absolute;
+      top: 26%;
+      right: 27%;
+      left: 27%;
+      height: 40%;
+      border-radius: 24px;
+      background: linear-gradient(160deg, #20212a, #050609);
+      box-shadow: inset 0 2px 10px #555;
+    }
+    .touch { position: absolute; top: 9%; right: 31%; left: 31%; height: 23%; border: 2px solid #777; border-radius: 20px; background: linear-gradient(160deg, #fafaff, #d7d8e1); }
+    .stick {
+      position: absolute;
+      width: 18%;
+      aspect-ratio: 1;
+      border: 4px solid #292b32;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #555, #111 48%, #070708 72%);
+      box-shadow: 0 5px 12px #0009;
+    }
+    .stick.left { top: 43%; left: 28%; }
+    .stick.right { top: 43%; right: 28%; }
+    .dpad { position: absolute; top: 39%; left: 13%; width: 17%; height: 23%; }
+    .dpad i { position: absolute; border: 2px solid #393b43; border-radius: 6px; background: #121318; box-shadow: 0 4px 5px #0007; }
+    .dpad .v { left: 35%; width: 30%; height: 100%; }
+    .dpad .h { top: 35%; width: 100%; height: 30%; }
+    .face { position: absolute; top: 34%; right: 12%; width: 20%; height: 26%; }
+    .face button {
+      position: absolute;
+      width: 28%;
+      aspect-ratio: 1;
+      border: 1px solid #555;
+      border-radius: 50%;
+      background: #15171b;
+      color: #ddd;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .face button:nth-child(1) { top: 0; left: 36%; }
+    .face button:nth-child(2) { top: 36%; right: 0; }
+    .face button:nth-child(3) { top: 36%; left: 0; }
+    .face button:nth-child(4) { bottom: 0; left: 36%; }
+    .pillbutton { position: absolute; top: 39%; left: 45%; width: 10%; height: 5%; border: 1px solid #777; border-radius: 15px; background: #222; color: #ccc; font-size: 8px; }
+    .controller-label { position: absolute; bottom: 7%; left: 44%; color: #555; font-size: 10px; font-weight: 900; letter-spacing: 2px; }
+    .control-press.active { outline: 2px solid var(--pink); background: #fa5890 !important; box-shadow: 0 0 15px #ff5b9b99 !important; }
+    .side { display: flex; flex-direction: column; gap: 16px; }
+    .settings, .macro, .map-panel, .input-panel { padding: 18px 20px; }
+    .section-title { margin-bottom: 15px; font-weight: 800; }
+    .control { margin: 15px 0; }
+    .control label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 7px; color: #d8cde2; font-size: 11px; }
+    .control output { color: var(--pink); font-weight: 800; }
+    input[type="range"] { width: 100%; accent-color: var(--pink); }
+    select, input[type="text"] { width: 100%; padding: 10px; border: 1px solid #44324e; border-radius: 9px; background: #0f0d15; color: white; }
+    .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .btn { width: 100%; padding: 11px 14px; border: 1px solid #78466e; border-radius: 10px; background: linear-gradient(110deg, #432252, #842b53); color: white; font-weight: 800; letter-spacing: .5px; cursor: pointer; }
+    .btn.secondary { border-color: #473450; background: #21192a; }
+    .btn:disabled { opacity: .48; cursor: not-allowed; }
+    .status { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; color: #c9c0d0; font-size: 11px; }
+    .dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: #8e79a6; }
+    .dot.ready { background: var(--green); box-shadow: 0 0 10px var(--green); }
+    .macro-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .note { margin: 12px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+    .bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .mapgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .mapkey { padding: 9px 8px; border: 1px solid #44334f; border-radius: 9px; background: #17131e; text-align: center; color: #d9cfe3; font-size: 10px; }
+    .mapkey b { display: block; margin-bottom: 2px; color: white; font-size: 12px; }
+    .mapkey.active { border-color: var(--pink); background: #442038; }
+    .statusline { display: flex; justify-content: space-between; gap: 8px; padding-top: 10px; color: var(--muted); font-size: 11px; }
+    .statusline b { color: var(--white); font-weight: 600; }
+    .event-list { max-height: 125px; overflow: auto; margin: 12px 0 0; padding-left: 20px; color: #d9cfe3; font-size: 11px; }
+    .toast { position: fixed; z-index: 5; bottom: 18px; left: 50%; max-width: calc(100vw - 32px); padding: 11px 16px; transform: translateX(-50%); border: 1px solid #784768; border-radius: 12px; background: #26142b; color: #fff; opacity: 0; transition: opacity .2s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+    @media (max-width: 850px) {
+      .grid { grid-template-columns: 1fr; }
+      .side { display: grid; grid-template-columns: 1fr 1fr; }
+      .bottom { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      header { padding: 10px 14px; }
+      .header-note { display: none; }
+      main { padding: 20px 12px 36px; }
+      .intro { align-items: start; flex-direction: column; }
+      .side { grid-template-columns: 1fr; }
+      .controller-wrap { min-height: 250px; padding: 14px 8px; }
+      .controller { aspect-ratio: 1.3; }
+      .shell, .paint { inset: 10% 1% 7%; }
+      .center { right: 26%; left: 26%; }
+      .stick.left { top: 44%; left: 28%; }
+      .stick.right { top: 44%; right: 28%; }
+      .dpad { top: 40%; left: 11%; }
+      .face { top: 34%; right: 10%; }
+      .mapgrid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="brandmark" aria-hidden="true">G</span><span>GXPAIN<span class="sub">CONTROLLER &amp; MACRO STUDIO</span></span></div>
+    <span class="header-note">Portable profiles · works in your browser</span>
+  </header>
+  <main>
+    <div class="intro">
+      <div>
+        <h1>GXPAIN Controller Studio</h1>
+        <p>Test your controller, record a keyboard/gamepad macro, and take it with you.</p>
+      </div>
+      <span class="badge" id="platformBadge">PLAYSTATION LAYOUT</span>
+    </div>
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-head"><h2>CONTROLLER INPUT</h2><span class="small" id="gamepadStatus">Connect a gamepad, then press a button</span></div>
+        <div class="controller-wrap">
+          <div class="controller" id="controller" aria-label="Controller visualization">
+            <div class="shell"></div><div class="paint"></div><div class="center"></div><div class="touch"></div>
+            <div class="dpad"><i class="control-press" data-button="DPad"></i><i class="control-press" data-button="DPad"></i></div>
+            <div class="stick left control-press" data-button="LStick"></div>
+            <div class="stick right control-press" data-button="RStick"></div>
+            <div class="face" id="face">
+              <button class="control-press" data-button="north" aria-label="Top face button">△</button>
+              <button class="control-press" data-button="east" aria-label="Right face button">○</button>
+              <button class="control-press" data-button="west" aria-label="Left face button">□</button>
+              <button class="control-press" data-button="south" aria-label="Bottom face button">×</button>
+            </div>
+            <button class="pillbutton control-press" data-button="Menu" aria-label="Menu button">MENU</button>
+            <div class="controller-label" id="controllerLabel">PLAYSTATION</div>
+          </div>
+        </div>
+        <div class="panel-head">
+          <span class="small" id="buttonStatus" aria-live="polite">Waiting for controller input</span>
+          <span class="small" id="activeCount">0 buttons active</span>
+        </div>
+      </section>
+      <aside class="side">
+        <section class="panel settings">
+          <h2 class="section-title">CONTROLLER SETTINGS</h2>
+          <div class="control"><label for="platform">LAYOUT</label><select id="platform"><option value="PS">PlayStation</option><option value="Xbox">Xbox</option></select></div>
+          <div class="control"><label for="speed">STICK SPEED <output id="speedOut">100%</output></label><input id="speed" type="range" min="50" max="200" value="100"></div>
+          <div class="control"><label for="dead">DEADZONE <output id="deadOut">5%</output></label><input id="dead" type="range" min="0" max="25" value="5"></div>
+          <div class="control"><label for="profile">PROFILE</label><select id="profile"><option>Default</option><option>Comfort</option><option>Precision</option><option>Custom</option></select></div>
+          <button class="btn secondary" id="saveProfile">SAVE PROFILE</button>
+        </section>
+        <section class="panel macro">
+          <h2 class="section-title">MACRO RECORDER</h2>
+          <p class="status"><span class="dot" id="recordDot"></span><span id="recordStatus" aria-live="polite">Ready to record keyboard, gamepad, or diagram input</span></p>
+          <div class="control"><label for="macroName">MACRO NAME</label><input id="macroName" type="text" maxlength="60" value="GXPAIN Macro"></div>
+          <div class="macro-actions">
+            <button class="btn" id="recordBtn">START RECORDING</button>
+            <button class="btn secondary" id="stopBtn" disabled>STOP</button>
+            <button class="btn secondary" id="playBtn" disabled>PREVIEW PLAYBACK</button>
+            <button class="btn secondary" id="saveMacroBtn">SAVE ON DEVICE</button>
+            <button class="btn secondary" id="exportBtn" disabled>EXPORT FILE</button>
+            <button class="btn secondary" id="importBtn">IMPORT FILE</button>
+          </div>
+          <input class="visually-hidden" type="file" id="importFile" accept="application/json,.json">
+          <p class="note">Records keyboard, gamepad, and diagram-button presses while this page is focused. Playback previews the events here only; browsers cannot send input to other apps or write macros into controller firmware. Timing is best-effort, not 1 ms guaranteed.</p>
+        </section>
+      </aside>
+    </div>
+    <div class="bottom">
+      <section class="panel map-panel"><h2 class="section-title">INPUT MAP</h2><div class="mapgrid" id="mapgrid"></div></section>
+      <section class="panel input-panel">
+        <h2 class="section-title">PROFILE &amp; MACRO</h2>
+        <div class="statusline"><span>Selected layout</span><b id="layoutStatus">PlayStation</b></div>
+        <div class="statusline"><span>Stick speed</span><b id="speedStatus">100%</b></div>
+        <div class="statusline"><span>Deadzone</span><b id="deadStatus">5%</b></div>
+        <div class="statusline"><span>Macro events</span><b id="eventCount">0</b></div>
+        <ol class="event-list" id="eventList" aria-label="Recorded macro events"></ol>
+        <p class="note">Export a JSON macro to transfer it to another device running GXPAIN. Import the file there to preview it.</p>
+      </section>
+    </div>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    (() => {
+      "use strict";
+
+      const STORAGE_KEY = "gxpain-controller-profile-v1";
+      const MACRO_KEY = "gxpain-macro-v1";
+      const MAX_EVENTS = 5000;
+      const mapping = {
+        north: "Top face button",
+        east: "Right face button",
+        west: "Left face button",
+        south: "Bottom face button",
+        DPad: "D-pad",
+        LStick: "Left stick",
+        RStick: "Right stick",
+        Menu: "Menu"
+      };
+      const elements = Object.fromEntries([
+        "platform", "platformBadge", "controller", "controllerLabel", "speed", "dead", "profile",
+        "speedOut", "deadOut", "layoutStatus", "speedStatus", "deadStatus",
+        "gamepadStatus", "buttonStatus", "activeCount", "recordDot", "recordStatus",
+        "recordBtn", "stopBtn", "playBtn", "saveMacroBtn", "exportBtn", "importBtn",
+        "importFile", "macroName", "eventCount", "eventList", "mapgrid", "toast",
+        "saveProfile", "face"
+      ].map(id => [id, document.getElementById(id)]));
+
+      let events = [];
+      let recording = false;
+      let recordingStarted = 0;
+      let playbackTimers = [];
+      let toastTimer;
+      let activeInputs = new Set();
+      const keyboardInputs = new Set();
+      const gamepadInputs = new Set();
+      const manualInputs = new Set();
+      const previewInputs = new Set();
+      let previousGamepadButtons = [];
+      let previousGamepadAxes = [];
+
+      function showToast(message) {
+        elements.toast.textContent = message;
+        elements.toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => elements.toast.classList.remove("show"), 2200);
+      }
+
+      function updateActiveInputs(next) {
+        activeInputs = next;
+        document.querySelectorAll("[data-button]").forEach(button => {
+          button.classList.toggle("active", activeInputs.has(`button:${button.dataset.button}`));
+        });
+        elements.activeCount.textContent = `${activeInputs.size} inputs active`;
+        const first = activeInputs.values().next().value;
+        elements.buttonStatus.textContent = first ? `${first.replace(/^(key|button):/, "")} active` : "Waiting for controller input";
+        document.querySelectorAll(".mapkey").forEach(key => key.classList.toggle("active", activeInputs.has(key.dataset.input)));
+      }
+
+      function refreshInputs() {
+        updateActiveInputs(new Set([...keyboardInputs, ...gamepadInputs, ...manualInputs, ...previewInputs]));
+      }
+
+      function recordEvent(type, input, action, at = performance.now()) {
+        if (!recording) return;
+        if (events.length >= MAX_EVENTS) {
+          setRecording(false);
+          showToast(`Recording stopped at the ${MAX_EVENTS}-event safety limit.`);
+          return;
+        }
+        events.push({
+          time: Math.max(0, Math.round(at - recordingStarted)),
+          type,
+          input,
+          action
+        });
+        renderEvents();
+      }
+
+      function renderEvents() {
+        elements.eventCount.textContent = String(events.length);
+        elements.playBtn.disabled = events.length === 0 || recording;
+        elements.exportBtn.disabled = events.length === 0 || recording;
+        elements.eventList.replaceChildren();
+        events.slice(-10).forEach(event => {
+          const item = document.createElement("li");
+          item.textContent = `${(event.time / 1000).toFixed(2)}s · ${event.type} ${event.input} ${event.action}`;
+          elements.eventList.append(item);
+        });
+      }
+
+      function setRecording(value) {
+        recording = value;
+        elements.recordBtn.disabled = value;
+        elements.stopBtn.disabled = !value;
+        elements.recordDot.classList.toggle("ready", value);
+        elements.recordStatus.textContent = value ? "Recording — press keys, gamepad, or diagram buttons" : "Ready to record keyboard, gamepad, or diagram input";
+        if (value) {
+          stopPlayback();
+          events = [];
+          recordingStarted = performance.now();
+          renderEvents();
+        }
+      }
+
+      function keyInput(event) {
+        if (event.target instanceof HTMLElement && event.target.closest("input, select, textarea, [contenteditable=true]")) return;
+        const input = `key:${event.code}`;
+        if (event.type === "keydown" && !event.repeat) {
+          keyboardInputs.add(input);
+          recordEvent("key", event.code, "press");
+          refreshInputs();
+        } else if (event.type === "keyup") {
+          keyboardInputs.delete(input);
+          recordEvent("key", event.code, "release");
+          refreshInputs();
+        }
+      }
+
+      function buttonName(index) {
+        return [
+          "south", "east", "west", "north", "LB / L1", "RB / R1",
+          "LT / L2", "RT / R2", "Menu", "View / Share", "LStick",
+          "RStick", "DPad up", "DPad down", "DPad left", "DPad right"
+        ][index] || `Button ${index + 1}`;
+      }
+
+      function pollGamepad() {
+        let gamepad = null;
+        if (navigator.getGamepads) {
+          gamepad = Array.from(navigator.getGamepads()).find(pad => pad && pad.connected) || null;
+        }
+        if (gamepad) {
+          elements.gamepadStatus.textContent = `Connected: ${gamepad.id.slice(0, 48)}`;
+          const pressed = new Set();
+          gamepad.buttons.forEach((button, index) => {
+            if (!button.pressed && button.value < 0.5) return;
+            const name = buttonName(index);
+            pressed.add(`button:${name}`);
+            if (!previousGamepadButtons[index]) recordEvent("button", name, "press");
+          });
+          gamepad.buttons.forEach((button, index) => {
+            if (previousGamepadButtons[index] && !button.pressed && button.value < 0.5) {
+              recordEvent("button", buttonName(index), "release");
+            }
+          });
+          previousGamepadButtons = gamepad.buttons.map(button => button.pressed || button.value >= 0.5);
+          gamepadInputs.clear();
+          pressed.forEach(input => gamepadInputs.add(input));
+
+          gamepad.axes.forEach((value, index) => {
+            const deadzone = Number(elements.dead.value) / 100;
+            const next = Math.abs(value) > deadzone ? value : 0;
+            if (Math.abs(next - (previousGamepadAxes[index] || 0)) > 0.15) {
+              const label = `Axis ${index + 1}: ${next.toFixed(2)}`;
+              elements.buttonStatus.textContent = next === 0 ? "Stick centered" : label;
+            }
+            if (recording && Math.abs(next - (previousGamepadAxes[index] || 0)) > 0.15) {
+              recordEvent("axis", `Axis ${index + 1}:${next.toFixed(2)}`, "move");
+            }
+            previousGamepadAxes[index] = next;
+          });
+          refreshInputs();
+        } else {
+          elements.gamepadStatus.textContent = "Connect a gamepad, then press a button";
+          previousGamepadButtons = [];
+          previousGamepadAxes = [];
+          gamepadInputs.clear();
+          refreshInputs();
+        }
+        requestAnimationFrame(pollGamepad);
+      }
+
+      function setPlatform(platform) {
+        const isXbox = platform === "Xbox";
+        elements.platform.value = platform;
+        elements.platformBadge.textContent = isXbox ? "XBOX LAYOUT" : "PLAYSTATION LAYOUT";
+        elements.controllerLabel.textContent = isXbox ? "XBOX" : "PLAYSTATION";
+        elements.layoutStatus.textContent = isXbox ? "Xbox" : "PlayStation";
+        elements.face.innerHTML = isXbox
+          ? '<button class="control-press" data-button="north" aria-label="Top face button">Y</button><button class="control-press" data-button="east" aria-label="Right face button">B</button><button class="control-press" data-button="west" aria-label="Left face button">X</button><button class="control-press" data-button="south" aria-label="Bottom face button">A</button>'
+          : '<button class="control-press" data-button="north" aria-label="Top face button">△</button><button class="control-press" data-button="east" aria-label="Right face button">○</button><button class="control-press" data-button="west" aria-label="Left face button">□</button><button class="control-press" data-button="south" aria-label="Bottom face button">×</button>';
+      }
+
+      function renderMap() {
+        elements.mapgrid.replaceChildren();
+        Object.entries(mapping).forEach(([key, description]) => {
+          const item = document.createElement("div");
+          item.className = "mapkey";
+          item.dataset.input = `button:${key}`;
+          const title = document.createElement("b");
+          title.textContent = key;
+          item.append(title, document.createTextNode(description));
+          elements.mapgrid.append(item);
+        });
+      }
+
+      function validateMacro(value) {
+        if (!value || value.format !== "gxpain-macro" || value.version !== 1 || typeof value.name !== "string" ||
+            !Array.isArray(value.events) || value.events.length > MAX_EVENTS) {
+          throw new Error("This is not a supported GXPAIN macro file.");
+        }
+        let previousTime = -1;
+        for (const event of value.events) {
+          if (!event || !["key", "button", "axis"].includes(event.type) ||
+              typeof event.input !== "string" || event.input.length > 100 ||
+              !["press", "release", "move"].includes(event.action) ||
+              !Number.isFinite(event.time) || event.time < previousTime || event.time > 3600000) {
+            throw new Error("The macro contains invalid or unsupported events.");
+          }
+          previousTime = event.time;
+        }
+        return { format: "gxpain-macro", version: 1, name: value.name.slice(0, 60), events: value.events };
+      }
+
+      function downloadMacro() {
+        const data = {
+          format: "gxpain-macro",
+          version: 1,
+          name: elements.macroName.value.trim() || "GXPAIN Macro",
+          createdAt: new Date().toISOString(),
+          events
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${data.name.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "") || "gxpain-macro"}.json`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast("Macro exported. Copy the file to your other device.");
+      }
+
+      function previewPlayback() {
+        stopPlayback();
+        if (!events.length) return;
+        elements.recordStatus.textContent = "Previewing events in GXPAIN";
+        previewInputs.clear();
+        events.forEach(event => {
+          playbackTimers.push(setTimeout(() => {
+            const input = `${event.type}:${event.input}`;
+            if (event.action === "press") previewInputs.add(input);
+            if (event.action === "release") previewInputs.delete(input);
+            elements.buttonStatus.textContent = `Preview: ${event.input} ${event.action}`;
+            refreshInputs();
+          }, event.time));
+        });
+        playbackTimers.push(setTimeout(() => {
+          playbackTimers = [];
+          previewInputs.clear();
+          elements.recordStatus.textContent = "Preview complete";
+          refreshInputs();
+        }, events[events.length - 1].time + 50));
+      }
+
+      function stopPlayback() {
+        playbackTimers.forEach(clearTimeout);
+        playbackTimers = [];
+        previewInputs.clear();
+        refreshInputs();
+      }
+
+      elements.platform.addEventListener("change", () => setPlatform(elements.platform.value));
+      elements.speed.addEventListener("input", () => {
+        elements.speedOut.textContent = `${elements.speed.value}%`;
+        elements.speedStatus.textContent = `${elements.speed.value}%`;
+      });
+      elements.dead.addEventListener("input", () => {
+        elements.deadOut.textContent = `${elements.dead.value}%`;
+        elements.deadStatus.textContent = `${elements.dead.value}%`;
+      });
+      elements.saveProfile.addEventListener("click", () => {
+        const profile = {
+          platform: elements.platform.value,
+          speed: Number(elements.speed.value),
+          deadzone: Number(elements.dead.value),
+          name: elements.profile.value
+        };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+          showToast("Controller profile saved on this device.");
+        } catch (error) {
+          showToast(`Could not save profile: ${error.message}`);
+        }
+      });
+      elements.recordBtn.addEventListener("click", () => setRecording(true));
+      elements.stopBtn.addEventListener("click", () => {
+        [...keyboardInputs].forEach(input => {
+          if (input.startsWith("key:")) recordEvent("key", input.slice(4), "release");
+        });
+        previousGamepadButtons.forEach((pressed, index) => {
+          if (pressed) recordEvent("button", buttonName(index), "release");
+        });
+        setRecording(false);
+        showToast(events.length ? `Recorded ${events.length} events.` : "No inputs were recorded.");
+      });
+      elements.playBtn.addEventListener("click", previewPlayback);
+      elements.saveMacroBtn.addEventListener("click", () => {
+        try {
+          localStorage.setItem(MACRO_KEY, JSON.stringify({
+            format: "gxpain-macro",
+            version: 1,
+            name: elements.macroName.value.trim() || "GXPAIN Macro",
+            events
+          }));
+          showToast("Macro saved in this browser on this device.");
+        } catch (error) {
+          showToast(`Could not save macro: ${error.message}`);
+        }
+      });
+      elements.exportBtn.addEventListener("click", downloadMacro);
+      elements.importBtn.addEventListener("click", () => elements.importFile.click());
+      elements.importFile.addEventListener("change", async () => {
+        const file = elements.importFile.files[0];
+        elements.importFile.value = "";
+        if (!file) return;
+        if (file.size > 1024 * 1024) {
+          showToast("Macro file is too large (maximum 1 MB).");
+          return;
+        }
+        try {
+          const imported = validateMacro(JSON.parse(await file.text()));
+          events = imported.events;
+          elements.macroName.value = imported.name;
+          renderEvents();
+          showToast(`Imported ${events.length} events.`);
+        } catch (error) {
+          showToast(`Could not import macro: ${error.message}`);
+        }
+      });
+      document.addEventListener("keydown", event => {
+        if (!recording) return;
+        keyInput(event);
+      });
+      document.addEventListener("keyup", event => {
+        if (!recording) return;
+        keyInput(event);
+      });
+      window.addEventListener("gamepadconnected", event => {
+        elements.gamepadStatus.textContent = `Connected: ${event.gamepad.id.slice(0, 48)}`;
+      });
+      window.addEventListener("gamepaddisconnected", () => {
+        elements.gamepadStatus.textContent = "Gamepad disconnected";
+      });
+      elements.controller.addEventListener("pointerdown", event => {
+        const button = event.target.closest("[data-button]");
+        if (!button) return;
+        event.preventDefault();
+        const input = `button:${button.dataset.button}`;
+        manualInputs.add(input);
+        recordEvent("button", button.dataset.button, "press");
+        refreshInputs();
+        button.setPointerCapture(event.pointerId);
+      });
+      elements.controller.addEventListener("pointerup", event => {
+        const button = event.target.closest("[data-button]");
+        if (!button) return;
+        manualInputs.delete(`button:${button.dataset.button}`);
+        recordEvent("button", button.dataset.button, "release");
+        refreshInputs();
+      });
+      elements.controller.addEventListener("pointercancel", event => {
+        const button = event.target.closest("[data-button]");
+        if (button) {
+          manualInputs.delete(`button:${button.dataset.button}`);
+          recordEvent("button", button.dataset.button, "release");
+        }
+        refreshInputs();
+      });
+
+      try {
+        const savedProfile = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (savedProfile && ["PS", "Xbox"].includes(savedProfile.platform)) {
+          setPlatform(savedProfile.platform);
+          if (Number.isFinite(savedProfile.speed)) elements.speed.value = String(Math.min(200, Math.max(50, savedProfile.speed)));
+          if (Number.isFinite(savedProfile.deadzone)) elements.dead.value = String(Math.min(25, Math.max(0, savedProfile.deadzone)));
+          if (["Default", "Comfort", "Precision", "Custom"].includes(savedProfile.name)) elements.profile.value = savedProfile.name;
+          elements.speed.dispatchEvent(new Event("input"));
+          elements.dead.dispatchEvent(new Event("input"));
+        }
+        const savedMacro = localStorage.getItem(MACRO_KEY);
+        if (savedMacro) {
+          const macro = validateMacro(JSON.parse(savedMacro));
+          events = macro.events;
+          elements.macroName.value = macro.name;
+        }
+      } catch (error) {
+        showToast(`Could not load saved data: ${error.message}`);
+      }
+      renderMap();
+      renderEvents();
+      requestAnimationFrame(pollGamepad);
+    })();
+  </script>
+</body>
+</html>
